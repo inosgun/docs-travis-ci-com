@@ -15,8 +15,8 @@ configuration](/user/customizing-the-build/) guides first.
 
 Travis CI support for R is contributed by the community and may be removed or
 altered at any time. If you run into any problems, please report them in the
-[Travis CI issue tracker][github] and cc [@craigcitro][github 2],
-[@hadley][github 3], and [@jimhester][github 4].
+[Travis CI issue tracker][github] and cc [@craigcitro][github 2]
+and [@jimhester][github 4].
 
 ## Basic configuration
 
@@ -51,7 +51,7 @@ and package caching.
 
 The R environment comes with [LaTeX][tug] and [pandoc][johnmacfarlane]
 pre-installed, making it easier to use packages like [RMarkdown][rstudio] or
-[knitr][yihui].
+[knitr](https://yihui.name/knitr/){: data-proofer-ignore=""}
 
 ## Configuration options
 
@@ -80,6 +80,8 @@ r:
 
 As new minor versions are released, aliases will float and point to the most
 current minor release.
+
+You can access the above "channel" *string* (i.e. `release`) as opposed to the concrete version number (i.e `3.2.1`) with the environmental variable `TRAVIS_R_VERSION_STRING`.
 
 The exact R version used for each build is included in the 'R session information'
 fold within the build log.
@@ -234,10 +236,6 @@ repos:
 ```
 {: data-file=".travis.yml"}
 
-- `r_check_revdep`: if `true`, also run checks on CRAN packages which depend
-  on this one. This can be quite expensive, so it's not recommended to leave
-  this set to `true`.
-
 - `disable_homebrew`: if `true` this removes the preinstalled homebrew
   installation on OS X. Useful to test if the package builds on a vanilla OS X
   machine, such as the CRAN mac builder.
@@ -253,6 +251,8 @@ defaults](/user/environment-variables/#Default-Environment-Variables).
 - `_R_CHECK_CRAN_INCOMING_=false`
 - `NOT_CRAN=true`
 - `R_PROFILE=~/.Rprofile.site`
+- `TRAVIS_R_VERSION_STRING` set to the *string* provided *to* `r:`, i.e. `release`, `oldrel` or `devel`.
+   Useful, for example, to deploy only from `release` via `on: condition: "$TRAVIS_R_VERSION_STRING = release"`.
 
 ### Additional Dependency Fields
 
@@ -392,8 +392,6 @@ moving from r-travis to native support, see the [porting guide][github 9].
 
 [github 2]: https://github.com/craigcitro
 
-[github 3]: https://github.com/hadley
-
 [github 4]: https://github.com/jimhester
 
 [github 5]: https://github.com/hadley/devtools/blob/master/vignettes/dependencies.Rmd#package-remotes
@@ -419,7 +417,5 @@ moving from r-travis to native support, see the [porting guide][github 9].
 [rstudio]: http://rmarkdown.rstudio.com/
 
 [tug]: https://www.tug.org/texlive/
-
-[yihui]: http://yihui.name/knitr/
 
 [apt-addon]: /user/installing-dependencies/#Installing-Packages-with-the-APT-Addon
