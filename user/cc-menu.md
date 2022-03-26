@@ -23,25 +23,17 @@ Open source repositories use the URL scheme `https://api.travis-ci.org/repos/<ow
   <img alt="Screenshot of public CC feed" src="http://s3itch.paperplanes.de/Projects_20140305_165324_20140305_165329.jpg"/>
 </figure>
 
-To add a repository feed, we provide a generated URL (for both public and private repositories), which can be accessed by visiting the repository page and clicking on the Build Status Image, shown below:
+Private repositories use a different URL scheme, served from a different [API endpoint](https://api.travis-ci.com): `https://api.travis-ci.com/repos/<owner>/<repository>/cc.xml?token=token>`.
 
 <figure>
-  <img alt="Screenshot of Build Status Image" src="/images/repository-build-status-image.png"/>
+  <img alt="Screenshot of private CC feed" src="http://s3itch.paperplanes.de/Screenshot_20140305_165022_20140305_165032.jpg"/>
 </figure>
 
-Once the modal is open, select `CCTray` from the second dropdown, which
-then displays the URL to be copied. If the repository is private, it will also
-include the required token parameter:
+Private repositories require an authenticated URL with a token in it. You can find the token in your profile:
 
-<figure>
-  <img alt="Screenshot of Build Status Image Modal with generated URL"
-  src="/images/repository-build-status-modal-with-url.png"/>
-</figure>
+![Travis CI user token](/images/user-token.png)
 
-The generated URL includes the branch name selected in the modal. To specify a
-different branch, either select a different branch before copying the URL or edit the
-branch parameter manually. Should you choose to manually generate the URL, it
-must have the following form:
+By default, the feed will fetch the status of the default branch of the repository. To specify a different branch, use the `branch` parameter:
 
 - For open source projects use `https://api.travis-ci.org/repos/<owner>/<repository>/cc.xml?branch=<branch>`
 - For closed source projects use `https://api.travis-ci.com/repos/<owner>/<repository>/cc.xml?token=<token>&branch=<branch>`.
