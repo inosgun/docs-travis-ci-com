@@ -43,7 +43,7 @@ To start using Travis CI, make sure you have *all* of the following:
    rvm:
     - 2.2
     - jruby
-    - rbx-3
+    - rbx-2
    ```
    {: data-file=".travis.yml"}
 

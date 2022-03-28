@@ -141,7 +141,6 @@ However, if one of these stages times out, the build is marked as a failure.
 An optional phase in the build lifecycle is deployment. This step can't be
 overridden, but is defined by using one of our continuous deployment providers
 to deploy code to Heroku, Engine Yard, or a different supported platform.
-The deploy steps are skipped if the build is broken.
 
 When deploying files to a provider, prevent Travis CI from resetting your
 working directory and deleting all changes made during the build ( `git stash
@@ -156,8 +155,6 @@ deploy:
 You can run steps before a deploy by using the `before_deploy` phase. A non-zero exit code in this phase will mark the build as **errored**.
 
 If there are any steps you'd like to run after the deployment, you can use the `after_deploy` phase.
-
-Note that `before_deploy` and `after_deploy` are run before and after every deploy provider, so will run multiple times if there are multiple providers.
 
 ## Specifying Runtime Versions
 
@@ -203,8 +200,9 @@ It is very common for test suites or build scripts to hang.
 Travis CI has specific time limits for each job, and will stop the build and add an error message to the build log in the following situations:
 
 - A job produces no log output for 10 minutes
-- A job on travis-ci.org takes longer than 50 minutes
-- A job on travis-ci.com takes longer than 120 minutes
+- A job on travis-ci.org takes longer than 50 minutes 
+- A job running on OS X infrastructure takes longer than 50 minutes (applies to travis-ci.org or travis-ci.com)
+- A job on Linux infrastructure on travis-ci.com takes longer than 120 minutes 
 
 Some common reasons why builds might hang:
 
@@ -214,11 +212,15 @@ Some common reasons why builds might hang:
 
 > There is no timeout for a build; a build will run as long as all the jobs do as long as each job does not timeout.
 
-## Limiting Concurrent Jobs
+## Limiting Concurrent Builds
 
-{{ site.data.snippets.concurrent_jobs }}
+The maximum number of concurrent builds depends on the total system load, but
+one situation in which you might want to set a particular limit is:
 
-You can set the maximum number of concurrent jobs in the settings pane for
+- if your build depends on an external resource and might run into a race
+  condition with concurrent builds.
+
+You can set the maximum number of concurrent builds in the settings pane for
 each repository.
 
 ![Settings -> Limit concurrent builds](/images/screenshots/concurrent-builds-how-to.png)
@@ -235,9 +237,9 @@ If you are only interested in building the most recent commit on each branch you
 
 The *Auto Cancellation Setting* is in the Settings tab of each repository, and you can enable it separately for:
 
-* *Auto cancel branch builds* - which build your branch and appear in the *Build History* tab of your repository.
+* *pushes* - which build your branch and appear in the *Build History* tab of your repository.
 
-* *Auto cancel pull request builds* - which build the future merge result of your feature branch against its target and appear in the *Pull Requests* tab of your repository.
+* *pull requests* - which build the future merge result of your feature branch against its target and appear in the *Pull Requests* tab of your repository.
 
 ![Auto cancellation setting](/images/autocancellation.png "Auto cancellation setting")
 
@@ -257,14 +259,6 @@ You can set the [clone depth](http://git-scm.com/docs/git-clone) in `.travis.yml
 ```yaml
 git:
   depth: 3
-```
-{: data-file=".travis.yml"}
-
-You can also remove the `--depth` flag entirely with:
-
-```yaml
-git:
-  depth: false
 ```
 {: data-file=".travis.yml"}
 
@@ -325,21 +319,9 @@ git:
 {: data-file=".travis.yml"}
 
 
-## Git Sparse Checkout
-Travis CI supports `git`'s [sparse checkout](https://git-scm.com/docs/git-read-tree#_sparse_checkout)
-capability.
-To clone your repository sparsely, add:
-```yaml
-git:
-  sparse_checkout: skip-worktree-map-file
-```
-where `skip-worktree-map-file` is a path to the existing file in the current repository with data you'd like to put into `$GIT_DIR/info/sparse-checkout` file of [format described in Git documentation](https://git-scm.com/docs/git-read-tree#_sparse_checkout).
-
 ## Building Specific Branches
 
 Travis CI uses the `.travis.yml` file from the branch containing the git commit that triggers the build. Include branches using a safelist, or exclude them using a blocklist.
-
-> Note that you also need to take into account automatic [Pull Request Builds](/user/pull-requests#double-builds-on-pull-requests) when deciding to safelist or blocklist certain branches.
 
 ### Safelisting or blocklisting branches
 
@@ -399,8 +381,6 @@ If you don't want to run a build for a particular commit for any reason, add `[c
 
 Commits that have `[ci skip]` or `[skip ci]` anywhere in the commit messages are ignored by Travis CI.
 
-Note that in case multiple commits are pushed together, the `[skip ci]` or `[ci skip]` takes effect only if present in the commit message of the HEAD commit.
-
 ## Build Matrix
 
 When you combine the three main configuration options of *Runtime*, *Environment* and *Exclusions/Inclusions* you have a matrix of all possible combinations.
@@ -414,7 +394,7 @@ rvm:
   - 2.2
   - ruby-head
   - jruby
-  - rbx-3
+  - rbx-2
   - ree
 gemfile:
   - gemfiles/Gemfile.rails-2.3.x
@@ -495,54 +475,6 @@ matrix:
     env: DB=mysql
 ```
 {: data-file=".travis.yml"}
-
-#### Excluding jobs with `env` value
-
-When excluding jobs with `env` values, the value must match
-_exactly_.
-
-For example,
-
-```yaml
-language: ruby
-rvm:
-- 1.9.3
-- 2.0.0
-- 2.1.0
-env:
-- DB=mongodb SUITE=all
-- DB=mongodb SUITE=compact
-- DB=redis
-- DB=mysql
-matrix:
-  exclude:
-    - rvm: 1.9.3
-      env: DB=mongodb
-```
-
-defines a 3×4 matrix, because the `env` value does not match with
-any job defined in the matrix.
-
-To exclude all Ruby 1.9.3 jobs with `DB=mongodb` set, write:
-
-```yaml
-language: ruby
-rvm:
-- 1.9.3
-- 2.0.0
-- 2.1.0
-env:
-- DB=mongodb SUITE=all
-- DB=mongodb SUITE=compact
-- DB=redis
-- DB=mysql
-matrix:
-  exclude:
-    - rvm: 1.9.3
-      env: DB=mongodb SUITE=all # not 'env: DB=mongodb  SUITE=all' or 'env: SUITE=all DB=mongodb'
-    - rvm: 1.9.3
-      env: DB=mongodb SUITE=compact # not 'env: SUITE=compact DB=mongodb'
-```
 
 ### Explicitly Including Jobs
 
@@ -702,7 +634,7 @@ Consider a scenario where you want to run more complex test scenarios, but only 
 set -ev
 bundle exec rake:units
 if [ "${TRAVIS_PULL_REQUEST}" = "false" ]; then
-  bundle exec rake test:integration
+	bundle exec rake test:integration
 fi
 ```
 
@@ -736,7 +668,7 @@ hostnames in `/etc/hosts` for both IPv4 and IPv6.
 ```yaml
 addons:
   hosts:
-  - travis.test
+  - travis.dev
   - joshkalderimis.com
 ```
 {: data-file=".travis.yml"}

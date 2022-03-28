@@ -51,7 +51,7 @@ rust:
 Travis CI also supports all three Rust [release channels][channels]: `stable`,
 `beta`, and `nightly`.
 
-[channels]: https://doc.rust-lang.org/book/first-edition/release-channels.html
+[channels]: http://doc.rust-lang.org/book/release-channels.html
 
 The Rust team appreciates testing against the `beta` and `nightly` channels,
 even if you are only targeting `stable`. A full configuration looks like this:
@@ -65,7 +65,6 @@ rust:
 matrix:
   allow_failures:
     - rust: nightly
-  fast_finish: true
 ```
 {: data-file=".travis.yml"}
 
@@ -83,7 +82,7 @@ cargo build --verbose
 You can cache your dependencies so they are only recompiled if they or the
 compiler were upgraded:
 
-```yaml
+```yanl
 cache: cargo
 ```
 {: data-file=".travis.yml"}
@@ -100,7 +99,7 @@ cargo test --verbose
 You always can always configure different comands if you need to. For example,
 if your project is a
 [workspace](http://doc.crates.io/manifest.html#the-workspace-section), you
-should pass `--all` to the build commands to build and test all of the member
+should pass `-all` to the build commands to build and test all of the member
 crates:
 
 ```yaml
